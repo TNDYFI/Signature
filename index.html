@@ -200,7 +200,7 @@ async function createPDFBlob(){
     });
     // Add image: dataUrl, format, x, y, width, height
     // Adjusted logo coordinates: X=40 (left margin), Y=20 (top margin), Size=60x60
-    pdf.addImage(logoImg, 'JPEG', 50, 30, 70, 70); 
+    pdf.addImage(logoImg, 'JPEG', 60, 40, 60, 50); 
   } catch(e) {
     console.warn("Logo failed to load:", e);
   }
@@ -346,7 +346,7 @@ submitBtn.onclick = async ()=>{
       await mailCountRef.transaction(current => (current || 0) + 1);
       showMessage('Submitted successfully — email sent!');
       // clear form
-      document.getElementById('name').value = '';
+      document.getE oklementById('name').value = '';
       document.getElementById('number').value = '';
       document.getElementById('district').value = '';
       signaturePad.clear();
