@@ -178,7 +178,7 @@ async function createPDFBlob(){
   const { jsPDF } = window.jspdf;
   
   // *** RESTORED TO LANDSCAPE FOR BETTER A4 LAYOUT ***
-  const pdf = new jsPDF('landscape','pt','a3'); 
+  const pdf = new jsPDF('landscape','pt','a5'); 
 
   const pdfW = pdf.internal.pageSize.getWidth();
   const pdfH = pdf.internal.pageSize.getHeight();
@@ -200,7 +200,7 @@ async function createPDFBlob(){
     });
     // Add image: dataUrl, format, x, y, width, height
     // Adjusted logo coordinates: X=40 (left margin), Y=20 (top margin), Size=60x60
-    pdf.addImage(logoImg, 'JPEG', 40, 20, 60, 60); 
+    pdf.addImage(logoImg, 'JPEG', 50, 30, 70, 70); 
   } catch(e) {
     console.warn("Logo failed to load:", e);
   }
