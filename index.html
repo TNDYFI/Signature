@@ -178,7 +178,7 @@ async function createPDFBlob(){
   const { jsPDF } = window.jspdf;
   
   // *** RESTORED TO LANDSCAPE FOR BETTER A4 LAYOUT ***
-  const pdf = new jsPDF('landscape','pt','a4'); 
+  const pdf = new jsPDF('landscape','pt','a6'); 
 
   const pdfW = pdf.internal.pageSize.getWidth();
   const pdfH = pdf.internal.pageSize.getHeight();
