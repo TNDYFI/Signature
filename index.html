@@ -223,6 +223,21 @@ async function createPDFBlob(){
   return pdf.output('blob');
 }
 
+// --- 1. Add Logo (top-left) ---
+  try {
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous'; 
+    logoImg.src = LOGO_URL;
+    await new Promise((resolve, reject) => {
+        logoImg.onload = resolve;
+        logoImg.onerror = reject;
+    });
+ // Add image: dataUrl, format, x, y, width, height
+    pdf.addImage(logoImg, 'JPEG', 40, 20, 60, 60); // Placing logo in top-left (x=40, y=20)
+  } catch(e) {
+    console.warn("Logo failed to load:", e);
+  }
+  
 /* ----------------------------- PDF Menu UI ----------------------------- */
 pdfMenuBtn.onclick = ()=> { pdfMenu.style.display = pdfMenu.style.display === 'block' ? 'none' : 'block'; };
 previewBtn.onclick = async ()=>{
