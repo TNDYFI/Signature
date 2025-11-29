@@ -44,6 +44,10 @@ button.green{background:#0a8f08}
 .message-box.active{visibility:visible;opacity:1}
 .message-content{background:#fff;padding:20px;border-radius:10px;max-width:320px;text-align:center}
 .small{font-size:13px;color:#666}
+  /* small responsive tweaks */
+@media (max-width:600px){
+  input,select{width:94%}
+  .controls{flex-direction:column;align-items:center}}
 </style>
 </head>
 <body>
@@ -176,6 +180,119 @@ setupCanvas();
 
 clearBtn.onclick = ()=> signaturePad.clear();
 
+  
+/* ----------------------------- helper: load image as dataURL ----------------------------- */
+async function loadImageDataURL(url){
+  const resp = await fetch(url);
+  const blob = await resp.blob();
+  return await new Promise((res, rej)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> res(reader.result);
+    reader.onerror = rej;
+    reader.readAsDataURL(blob);
+  });
+}
+
+  // Load background/logo image (full-page faint watermark + header logo)
+  const bgUrl = 'https://tndyfi.github.io/Signature/images/previews.png';
+  let bgDataUrl = null;
+  try{ bgDataUrl = await loadImageDataURL(bgUrl); } catch(e) { console.warn('Background load failed', e); }
+
+  // If background loaded, add it first as low-contrast watermark by drawing then overlaying a white rectangle with reduced opacity
+  if(bgDataUrl){
+    // add full page image
+    pdf.addImage(bgDataUrl, 'PNG', 0, 0, pdfW, pdfH);
+    // overlay semi-transparent white to wash out the image (approximate by drawing many white rectangles)
+    pdf.setFillColor(255,255,255);
+    pdf.setAlpha ? pdf.setAlpha(0.85) : null; // setAlpha may not exist in some builds
+    try{ pdf.rect(0,0,pdfW,pdfH,'F'); }catch(e){}
+    if(pdf.setAlpha) pdf.setAlpha(1);
+  }
+
+  // Header: logo at left and title
+  if(bgDataUrl){
+    // use a small logo
+    const logoW = 70;
+    const logoH = 70;
+    pdf.addImage(bgDataUrl, 'PNG', 40, 30, logoW, logoH);
+  }
+
+  pdf.setFont('helvetica');
+  pdf.setFontSize(18);
+  pdf.setTextColor(10,10,10);
+  pdf.text('Democratic Youth Federation of India — Tamil Nadu', 120, 52);
+  pdf.setFontSize(12);
+  pdf.text('அட்சரவு: DYFI — TNPSC கையெழுத்து இயக்கம்', 120, 70);
+
+  // Draw a thin divider
+  pdf.setDrawColor(200);
+  pdf.setLineWidth(0.6);
+  pdf.line(40, 105, pdfW-40, 105);
+
+  // Title
+  pdf.setFontSize(14);
+  pdf.setFont('times','bold');
+  pdf.text('TNPSC — 1 லட்சம் காலி பணியிடங்கள்: கையெழுத்து இயக்கம்', 40, 130);
+
+  // Content (DYFI message) — can be long. Use splitTextToSize
+  pdf.setFontSize(11);
+  pdf.setFont('times','normal');
+  const content = `தமிழ்நாடு மாநிலம் முழுவதும் TNPSC தேர்வின் மூலம் 1 இலட்சம் காலி பணியிடங்களை நிரப்புவதற்காக DYFI திட்டமிட்ட கையெழுத்து இயக்கத்தை முன்னெடுக்கிறது. இச்செயலின் மூலம் அரசு மற்றும் பதவியாளர் பதவிகளில் நியாயமான பொது நேர்மையை வலியுறுத்துகின்றோம். மனுவல்/தகவல் பெறுபவர்களுக்கு இந்தத் தளத்தின் மூலம் ஆதரவு வழங்கப்படும். இப்பணியில் பங்கேற்கும் அனைவரும் தங்கள் பெயர், மாவட்டம் மற்றும் தொலைபேசி எண்ணை பதிவு செய்வதன் மூலம் நமதுகூட்டத் தொகுப்பை வலுப்படுத்துவர். உங்கள் ஒவ்வொரு கையெழுத்தும் வேலைவாய்ப்புகளுக்கான உரிமையை பட்டியலிட உதவும்.`;
+  const split = pdf.splitTextToSize(content, pdfW - 80);
+  let cursorY = 155;
+  pdf.text(split, 40, cursorY);
+  cursorY += split.length * 14 + 10;
+
+  // Add user details block
+  pdf.setFontSize(12);
+  pdf.setFont('times','bold');
+  pdf.text(`Name: ${name}`, 40, cursorY);
+  pdf.setFont('times','normal');
+  pdf.text(`Phone: ${number}`, 40, cursorY + 18);
+  pdf.text(`District: ${district}`, 40, cursorY + 36);
+  pdf.text(`Date: ${new Date().toLocaleString()}`, 40, cursorY + 54);
+
+  // Reserve space for signature near the end - compute signature placement
+  const sigBoxTop = cursorY + 80;
+  const sigBoxHeight = 120;
+
+  // If signature exists on canvas, add it to PDF at bottom-right
+  if(!signaturePad.isEmpty()){
+    const dataUrl = signaturePad.toDataURL('image/png');
+    const img = new Image();
+    img.src = dataUrl;
+    await new Promise(r => img.onload = r);
+
+    // place signature at bottom-right within page margins
+    const sigW = 200;
+    const sigH = (img.height / img.width) * sigW;
+    const sigX = pdfW - sigW - 60;
+    const sigY = pdfH - sigH - 110;
+    pdf.addImage(dataUrl, 'PNG', sigX, sigY, sigW, sigH);
+
+    // Printed name & district under signature
+    pdf.setFontSize(11);
+    pdf.setFont('times','normal');
+    pdf.text(`${name}`, sigX + 10, sigY + sigH + 18);
+    pdf.text(`${district}`, sigX + 10, sigY + sigH + 36);
+    pdf.text(`Signed on ${new Date().toLocaleDateString()}`, sigX + 10, sigY + sigH + 54);
+  } else {
+    pdf.setFontSize(12);
+    pdf.setFont('times','italic');
+    pdf.text('No signature provided', pdfW - 220, pdfH - 120);
+  }
+
+  // Footer
+  pdf.setFontSize(9);
+  pdf.setTextColor(100);
+  pdf.text('DYFI Tamil Nadu — United for youth employment and justice', 40, pdfH - 40);
+
+  return pdf.output('blob');
+}
+
+  
+
+  
 /* ----------------------------- PDF creation (returns blob) ----------------------------- */
 async function createPDFBlob(){
   const { jsPDF } = window.jspdf;
