@@ -303,7 +303,7 @@ async function createPDFBlob(){
   
   //----- Use .text(..., 'right') alignment
     const textX = pdfW - paddingX;
-    let textY = sigY + sigH + 20;
+    let textY = sigY + sigH + 10;
 
     pdf.text(`${name}`, textX, textY, { align: 'right' });
     textY += 18;
