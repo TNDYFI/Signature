@@ -326,6 +326,7 @@ async function createPDFBlob(){
   pdf.setTextColor(100);
   pdf.setFont('helvetica', 'normal'); 
   pdf.text('DYFI - Tamil Nadu', 50, pdfH - 50);
+  pdf.text('contact: +919597612301,+918220554826,+919884512215. ', 50, pdfH - 50);
 
   // Return the PDF as a Blob
   return pdf.output('blob');
